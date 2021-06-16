@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="">
+<meta name="author" content="">
+<title>活綠園-訂單查詢</title>
+
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+        body {
+            padding-top: 54px;
+        }
+        
+        .form-group {
+            text-align: left;
+        }
+        
+        img.img-responsive {
+            height: 400px;
+        }
+        
+        @media (min-width: 992px) {
+            body {
+                padding-top: 56px;
+            }
+        }
+        
+        @media (max-width: 980px) {
+            img.img-responsive {
+                height: 250px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            img.img-responsive {
+                height: 100px;
+            }
+        }
+    </style>
+
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KH6W3QV');</script>
+
+</head>
+<body>
+
+<div class="container">
+<div class="row">
+<div class="col-lg-12 text-center">
+<h1 class="mt-5">訂單處理列表</h1>
+
+
+<div class="form-group col-xs-12">
+<button type="button" id="send" class="btn btn-primary col-xs-12">更新訂單</button>
+</div>
+<div class="form-group col-xs-12">
+<table class="table table-striped" style="display: none;">
+<thead>
+<tr>
+<th>Name</th>
+<th>Phone</th>
+<th>Time</th>
+<th>Item</th>
+<th>Price</th>
+<th>Status</th>
+<th>Update</th>
+</tr>
+</thead>
+<tbody id="dataView">
+</tbody>
+</table>
+</div>
+<div class="col-xs-12 text-center"><a href="./index.html">首頁</a></div>
+</div>
+</div>
+</div>
+<!--
+<div id="footer">製作 by <a href="https://iandays.com" target="_blank">Ian Chu.</a></div>
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script>
+        $(function() {
+            $('#send').click(function(e) {
+                var status = true;
+                $('input').focus(function() {
+                    $(this).css('border', '');
+                });
+
+                if (status) {
+                    var data = {
+                        'action': 'listall'
+                    }
+                    listOrder(data);
+                }
+            });
+        });
+
+        function handleData(response) {
+            var content = '';
+            response.forEach(element => {
+                        var [name, phone, time, item, price, , status] = element.data;
+                        var index = element.index;
+						var btn1="btn"+ (parseInt(index)*2);
+						var btn2="btn"+ (parseInt(index)*2+1);
+						//alert('index in:'+index);
+                        var statusWording = convertStatus(status);
+                        content +=
+                            `<tr>
+                <td>${name}</td>
+                <td>${phone}</td>
+                <td>${new Date(time)}</td>
+                <td>${item}</td>
+                <td>${price}</td>
+                <td class="status">${statusWording}</td>
+				<td>
+				  <div id=${btn1}>
+                  ${status !== '' ? '-' :
+                    `<button type="button" onclick="changeStatus('${name}', '${phone}', ${index}, 0, this)" class="btn btn-primary">取消訂單</button>`
+                  }
+				  </div>
+                </td>
+                <td>
+				  <div id=${btn2}>
+                  ${status !== '' ? '-' :
+                    `<button type="button" onclick="changeStatus('${name}', '${phone}', ${index}, 2, this)" class="btn btn-primary">完成交易</button>`
+                  }
+				  </div>
+                </td>
+              </tr>`
+        });
+        if (content) {
+          document.getElementsByClassName('table-striped')[0].style.display = 'table'; 
+        } else {
+          alert('查無資料');
+        }
+        var dataView = document.getElementById('dataView');
+        dataView.innerHTML = content;
+    }
+    function convertStatus(status){
+        var text = '';
+        switch (status) {
+          case '':
+            text = '尚未處理';
+            break;
+          case 0:
+            text = '訂單已取消';
+            break;
+          case 1:
+            text = '訂單處理中';
+            break;
+          case 2:
+            text = '完成製作';
+            break;
+          case 3:
+            text = '完成交易';
+            break;
+          default:
+            break;
+        }
+        return text;
+    }
+	function listOrder(data){
+      $.ajax({
+        type: "post",
+        url: "https://script.google.com/macros/s/AKfycby-Qew0fLZ57MmdN-ntIJXFw9G72t_jXDAtxKWPmExj5LgWJ6f8N5Q942nvUEO0Wzr-/exec",
+        data: data,
+        dataType: "JSON",
+        success: function (response) {
+          handleData(response);
+          $('#name').val('');
+          $('#phone').val(''); 
+        }
+      });
+    }
+
+    function changeStatus(name, phone, index, setStatus, that){
+	  var nIndex = parseInt(index)+1; //index in my sheet need add one
+      var data = {
+        name: name,
+        phone: phone,
+        action: 'delete',
+        index: nIndex,
+        status: setStatus
+      };
+	  
+	  
+	  switch(setStatus)
+	  {
+		case 0:
+			strID = "btn"+(parseInt(index)*2+1);
+			document.getElementById(strID).style.display="none";
+			break;
+		case 2:
+			strID = "btn"+(parseInt(index)*2);
+			document.getElementById(strID).style.display="none";
+			break;
+		default:
+        
+	  }
+	  
+
+      $.ajax({
+        type: "post",
+        url: "https://script.google.com/macros/s/AKfycby-Qew0fLZ57MmdN-ntIJXFw9G72t_jXDAtxKWPmExj5LgWJ6f8N5Q942nvUEO0Wzr-/exec",
+        data: data,
+        dataType: "JSON",
+        success: function (response) {
+          if(response === 'success'){
+            $(that).parent().parent().siblings('.status').text(convertStatus(setStatus));
+            $(that).remove();
+          } else {
+            alert('更新失敗！');
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
